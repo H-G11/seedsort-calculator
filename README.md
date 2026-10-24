@@ -25,4 +25,6 @@ Publish the repository's `main` branch, `/` (root), using GitHub Pages' “Deplo
 
 The actual embedded script passed direct execution with a simulated DOM for all 97,344 permitted slider combinations, including minimum and maximum values and each input listener. Checks covered all four results, displayed formula, labels, finite values, and slider fill percentages.
 
-Browser testing and deployment are pending: this execution environment blocks socket creation and Chromium startup, cannot resolve GitHub hosts, and cannot start the installed `gh` launcher because its CLI download requires network access. Visual responsiveness, native slider interactions, browser console errors, GitHub authentication, repository state, and the public deployment have not been verified.
+Local Chromium testing passed over HTTP: all four calculations, keyboard and pointer interactions on each slider, all eight minimum/maximum combinations, and responsive layouts at widths of 320, 375, 520, 768, and 1440 pixels. No horizontal overflow or browser console errors were detected; mobile and desktop screenshots were reviewed. The dark interface and calculation logic are preserved.
+
+Deployment is pending GitHub CLI authentication. Repository creation, pushing, Pages deployment, and the public URL must be verified after signing in as H-G11.
