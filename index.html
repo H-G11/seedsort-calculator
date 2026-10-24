@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>SeedSort — Интерактивный расчёт потока семян</title>
+<style>
+:root { color-scheme: dark; --bg:#050505; --panel:#080808; --line:#242424; --text:#ededed; --muted:#a7a7a7; --track:#1b1b1b; }
+* { box-sizing:border-box; }
+body {margin:0; min-height:100vh; background:var(--bg); color:var(--text); font:15px/1.45 Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif; display:grid; place-items:center; padding:28px 16px;}
+main{width:min(780px,100%)}
+h1{font-size:22px;font-weight:650;margin:0 0 8px;letter-spacing:-.3px}
+.intro{color:var(--muted);margin:0 0 22px}
+.formula{text-align:center;font-family:Georgia,serif;font-size:22px;margin:14px 0 30px}
+.panel{background:var(--panel); border:1px solid var(--line); border-radius:18px; padding:20px 14px 12px;}
+h2{font-size:18px;margin:0 0 16px;font-weight:650}
+.control{margin:0 0 13px}.control-head{display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:8px}.control-head label{color:#b6b6b6}.control-head output{font-weight:700;font-size:15px;white-space:nowrap}
+input[type=range]{appearance:none;-webkit-appearance:none;width:100%;height:24px;border-radius:99px;background:linear-gradient(to right,#5b5b5b 0%,#5b5b5b var(--percent),var(--track) var(--percent),var(--track) 100%);outline:none;cursor:pointer;margin:0;}
+input[type=range]::-webkit-slider-thumb{appearance:none;-webkit-appearance:none;width:21px;height:21px;border-radius:50%;border:1px solid #dadada;background:white;box-shadow:0 1px 3px #0007}
+input[type=range]::-moz-range-thumb{width:19px;height:19px;border-radius:50%;border:1px solid #dadada;background:white;box-shadow:0 1px 3px #0007}
+hr{border:0;border-top:1px solid #242424;margin:18px 0 20px}
+.results{display:grid;grid-template-columns:1fr 1fr;gap:12px 30px}
+.metric{min-width:0}.metric .caption{font-size:12px;color:#a5a5a5;margin-bottom:4px}.metric strong{display:block;font-size:20px;font-weight:700;line-height:1.25}.metric .unit{display:block;color:#a5a5a5;margin-top:4px;font-size:14px}
+.note{font-size:13px;line-height:1.38;color:#b8b8b8;margin:18px 0 0}
+.description{margin-top:18px;line-height:1.7;color:#cfcfcf}.description strong{color:#fff}
+@media(max-width:520px){.results{gap:18px 10px}.panel{padding:18px 12px 14px}.metric strong{font-size:19px}}
+</style>
+</head>
+<body>
+<main>
+<h1>Расчёт производительности SeedSort</h1>
+<p class="intro">Оценка нагрузки на систему сортировки семян</p>
+<div class="formula" id="formula">N = 800 000 / (3600 · 0,04) ≈ 5 556 семян/с</div>
+<section class="panel" aria-label="Интерактивный расчёт потока семян">
+<h2>Интерактивный расчёт потока семян</h2>
+<div class="control"><div class="control-head"><label for="capacity">Производительность</label><output id="capacityValue">800 кг/ч</output></div><input id="capacity" type="range" min="100" max="2000" step="50" value="800"></div>
+<div class="control"><div class="control-head"><label for="mass">Масса одного семени</label><output id="massValue">40 мг</output></div><input id="mass" type="range" min="10" max="200" step="5" value="40"></div>
+<div class="control"><div class="control-head"><label for="streams">Независимых потоков</label><output id="streamsValue">32</output></div><input id="streams" type="range" min="1" max="64" step="1" value="32"></div>
+<hr>
+<div class="results" aria-live="polite">
+<div class="metric"><div class="caption">Общий поток</div><strong id="total">5 556</strong><span class="unit">семян в секунду</span></div>
+<div class="metric"><div class="caption">На один поток</div><strong id="perStream">174</strong><span class="unit">семян в секунду</span></div>
+<div class="metric"><div class="caption">Средний интервал</div><strong id="interval">5,76 мс</strong><span class="unit">между семенами в одном потоке</span></div>
+<div class="metric"><div class="caption">Семян за 8,33 мс</div><strong id="window">46</strong><span class="unit">всего через установку</span></div>
+</div>
+<p class="note">Идеализированная равномерная подача. Пики нагрузки, зазоры, пропуски и группировка семян не учтены. Количество независимых потоков не обязательно равно количеству пневматических сопел.</p>
+</section>
+<div class="description" id="description"></div>
+</main>
+<script>
+const capacity=document.getElementById('capacity'),mass=document.getElementById('mass'),streams=document.getElementById('streams');
+const fmt=(n,dec=0)=>new Intl.NumberFormat('ru-RU',{maximumFractionDigits:dec,minimumFractionDigits:dec}).format(n);
+function update(){
+ const q=+capacity.value,m=+mass.value,s=+streams.value;
+ const total=q*1e6/(3600*m), per=total/s, gap=1000/per, win=total*0.00833;
+ document.getElementById('capacityValue').textContent=fmt(q)+' кг/ч';
+ document.getElementById('massValue').textContent=fmt(m)+' мг';
+ document.getElementById('streamsValue').textContent=fmt(s);
+ document.getElementById('total').textContent=fmt(total);
+ document.getElementById('perStream').textContent=fmt(per);
+ document.getElementById('interval').textContent=fmt(gap,2)+' мс';
+ document.getElementById('window').textContent=fmt(win);
+ document.getElementById('formula').textContent=`N = ${fmt(q*1000)} / (3600 · ${fmt(m/1000,3).replace(/0+$/,'').replace(/,$/,'')}) ≈ ${fmt(total)} семян/с`;
+ document.getElementById('description').innerHTML=`Посмотри на масштаб.<br><br>Если мы хотим сортировать <strong>${fmt(q/1000, q%1000===0?0:2)} ${q===1000?'тонну':'тонны'} в час</strong> при выбранной средней массе, через аппарат должны проходить примерно <strong>${fmt(total)} отдельных семян ежесекундно</strong>.<br><br>Это совсем не то же самое, что одноканальный стенд, сортирующий несколько семян в секунду.`;
+ for(const el of [capacity,mass,streams])el.style.setProperty('--percent',(100*(+el.value-el.min)/(el.max-el.min))+'%');
+}
+for(const el of [capacity,mass,streams])el.addEventListener('input',update);
+update();
+</script>
+</body>
+</html>
